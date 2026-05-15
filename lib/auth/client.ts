@@ -1,5 +1,12 @@
+import { inferAdditionalFields } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
+import type { auth } from './config';
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'http://localhost:3000',
+  // Don't set a fixed baseURL for multi-tenant - use current origin
+  // better-auth will automatically use window.location.origin on the client
+  // fetchOptions: {
+  //   credentials: 'include', // Critical for cookie-based sessions
+  // },
+  plugins: [inferAdditionalFields<typeof auth>()],
 });

@@ -1,4 +1,5 @@
 import { Providers } from '@/components/providers';
+import { Navbar } from '@/components/ui/navbar';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import './globals.css';
@@ -19,9 +20,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Tech Discussion',
+  title: 'Bake RI',
   description:
-    'Tech Discussion',
+    'Bake Ri',
 };
 
 export default function RootLayout({
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
         <Providers>
+          <Navbar />
           {children}
         </Providers>
       </body>
