@@ -1,23 +1,29 @@
-import { auth } from '@/lib/auth/config';
 import { db } from '@/lib/db';
+import { supabase } from '@/lib/auth/config';
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 
 /**
  * Creates context for an incoming request
- * @see https://trpc.io/docs/v11/context
  */
 export const createTRPCContext = async <
   T extends FetchCreateContextFnOptions & { headers?: Headers },
 >(
   opts: Partial<T>,
 ) => {
-  const session = await auth.api.getSession({
-    headers: new Headers(opts.headers ?? opts.req?.headers),
-  });
+  const authHeader = opts.headers?.get('authorization');
+
+  const token = authHeader?.replace('Bearer ', '');
+
+  let user = null;
+
+  if (token) {
+    const { data } = await supabase.auth.getUser(token);
+    user = data.user;
+  }
 
   return {
     db,
-    session,
+    user, 
   };
 };
 
