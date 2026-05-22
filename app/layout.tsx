@@ -1,4 +1,3 @@
-import { Providers } from '@/components/providers';
 import { Navbar } from '@/components/ui/navbar';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
@@ -34,10 +33,8 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
-        <Providers>
           <Navbar />
           {children}
-        </Providers>
       </body>
     </html>
   );
