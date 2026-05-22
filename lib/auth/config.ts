@@ -2,14 +2,14 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { randomUUID } from 'node:crypto';
 import { db } from '../db';
-import * as schema from '../db/schema';
+import * as schema from '../db/schema/user-schema';
 
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
-      user: schema.users,
+      user: schema.userAccount,
       account: schema.accounts,
       session: schema.sessions,
       verificationToken: schema.verificationTokens,

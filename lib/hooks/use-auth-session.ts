@@ -1,23 +1,36 @@
-import { authClient } from '@/lib/auth/client';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabaseClient } from '@/lib/auth/supabase-client';
 
 export const useAuthSession = () => {
-  const { data: session, isPending, error } = authClient.useSession();
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const isAuthenticated = !!session;
-  const hasSession = !isPending && !!session;
-  const hasNoSession = !isPending && !session && !error;
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabaseClient.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+    };
+
+    getSession();
+
+    const { data: listener } =
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+      });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   return {
     session,
     user: session?.user,
 
-    // loading & error
-    isPending,
-    error,
-
-    // auth state
-    isAuthenticated,
-    hasSession,
-    hasNoSession,
+    isAuthenticated: !!session,
+    isPending: loading,
   };
 };

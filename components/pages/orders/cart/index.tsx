@@ -6,9 +6,14 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthSession } from '@/lib/hooks/use-auth-session';
+import { CheckoutModal } from '@/components/checkout-modal';
+import { useState } from 'react';
+import { supabaseClient } from '@/lib/auth/supabase-client';
 
 const CartPage = () => {
   const router = useRouter();
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const { items, removeItem, updateQuantity, clearCart, totalPrice } =
     useOrderStore();
   
@@ -19,7 +24,61 @@ const CartPage = () => {
       router.push('/auth/login');
       return;
     }
-    router.push('/orders/checkout');
+    setIsCheckoutModalOpen(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    setIsConfirming(true);
+    try {
+      // Get the user's session token
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('No session or access token found:', { session });
+        throw new Error('Not authenticated. Please login again.');
+      }
+
+      console.log('Sending checkout request with token:', session.access_token.substring(0, 20) + '...');
+
+      // Call the checkout API
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            id: item.id,
+            variantId: item.variantId,
+            quantity: item.quantity,
+            price: item.price,
+            productcategoryid: item.productcategoryid ?? null,
+          })),
+          totalPrice: totalPrice(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Checkout error response:', error);
+        throw new Error(error.error || 'Failed to create order');
+      }
+
+      const result = await response.json();
+      
+      // Clear the cart and close modal
+      clearCart();
+      setIsCheckoutModalOpen(false);
+      
+      // Navigate to success page (you can create this later)
+      router.push(`/orders/success?orderId=${result.orderId}`);
+    } catch (error) {
+      console.error('Error confirming order:', error);
+      alert(error instanceof Error ? error.message : 'Failed to confirm order');
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   return (
@@ -59,7 +118,10 @@ const CartPage = () => {
                 <li key={item.id} className="flex items-center gap-4 py-5">
                   {/* Emoji thumbnail */}
                   <div className="bg-primary-10 flex size-14 shrink-0 items-center justify-center rounded-xl text-3xl">
-                    {item.emoji}
+                    <img
+                        src={item.imageUrl || '/images/placeholder.png'}
+                        alt={item.name}
+                      />
                   </div>
 
                   {/* Name + price */}
@@ -146,6 +208,16 @@ const CartPage = () => {
           </>
         )}
       </div>
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        onConfirm={handleConfirmOrder}
+        items={items}
+        totalPrice={totalPrice()}
+        isLoading={isConfirming}
+      />
     </div>
   );
 };

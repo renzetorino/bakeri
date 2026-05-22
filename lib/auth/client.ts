@@ -1,12 +1,21 @@
-import { inferAdditionalFields } from 'better-auth/client/plugins';
-import { createAuthClient } from 'better-auth/react';
-import type { auth } from './config';
+import { supabaseClient } from './supabase-client';
 
-export const authClient = createAuthClient({
-  // Don't set a fixed baseURL for multi-tenant - use current origin
-  // better-auth will automatically use window.location.origin on the client
-  // fetchOptions: {
-  //   credentials: 'include', // Critical for cookie-based sessions
-  // },
-  plugins: [inferAdditionalFields<typeof auth>()],
-});
+export const authClient = supabaseClient.auth;
+
+// Helper function to get current user
+export const getCurrentUser = async () => {
+  const { data: { user } } = await authClient.getUser();
+  return user;
+};
+
+// Helper function to check if user is authenticated
+export const isAuthenticated = async () => {
+  const user = await getCurrentUser();
+  return !!user;
+};
+
+// Helper function to sign out
+export const signOut = async () => {
+  return await authClient.signOut();
+};
+

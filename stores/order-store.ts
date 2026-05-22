@@ -3,10 +3,14 @@ import { persist } from 'zustand/middleware';
 
 export type CartItem = {
   id: number;
+  variantId: number;
   name: string;
   price: number;
-  emoji: string;
+  size: string;
+  color: string;
   quantity: number;
+  imageUrl: string | null;
+  productcategoryid?: number | null;
 };
 
 type OrderStore = {

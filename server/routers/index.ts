@@ -19,6 +19,7 @@ export const trpcRouter = router({
 
   // TODO: Add more routes here
   users: lazy(() => import('./users')),
+  orders: lazy(() => import('./orders').then((m) => m.ordersRouter)),
 });
 
 export type TRPCRouter = typeof trpcRouter;

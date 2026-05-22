@@ -2,48 +2,42 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { authClient } from '@/lib/auth/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const loginSchema = z.object({
-  email: z.email('Please enter a valid email address'),
-  password: z
-    .string()
-    .trim()
-    .min(8, { message: 'Password must be at least 8 characters.' })
-    .regex(/[A-Za-z]/, {
-      message: 'Password must contain at least one letter.',
-    })
-    .regex(/\d/, { message: 'Password must contain at least one number.' })
-    .regex(/[^A-Za-z0-9]/, {
-      message: 'Password must contain at least one symbol.',
-    }),
-  confirmPassword: z
-    .string()
-    .trim()
-    .min(8, { message: 'Password must be at least 8 characters.' })
-    .regex(/[A-Za-z]/, {
-      message: 'Password must contain at least one letter.',
-    })
-    .regex(/\d/, { message: 'Password must contain at least one number.' })
-    .regex(/[^A-Za-z0-9]/, {
-      message: 'Password must contain at least one symbol.',
-    }),
-  username: z.string().min(1, 'Username is required.'),
-  address: z.string().min(1, 'Address is required.'),
-});
+const loginSchema = z
+  .object({
+    email: z.email('Please enter a valid email address'),
+    password: z
+      .string()
+      .trim()
+      .min(8, { message: 'Password must be at least 8 characters.' })
+      .regex(/[A-Za-z]/, {
+        message: 'Password must contain at least one letter.',
+      })
+      .regex(/\d/, {
+        message: 'Password must contain at least one number.',
+      })
+      .regex(/[^A-Za-z0-9]/, {
+        message: 'Password must contain at least one symbol.',
+      }),
+    confirmPassword: z.string(),
+    username: z.string().min(1, 'Username is required.'),
+    address: z.string().min(1, 'Address is required.'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match.',
+  });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const sessionState = authClient.useSession();
-  const { data: session, isPending: isSessionPending } = sessionState;
   const [serverError, setServerError] = useState<string | null>(null);
   const [hasLoggedIn, setHasLoggedIn] = useState(false);
 
@@ -62,38 +56,40 @@ export default function AdminLoginPage() {
     },
   });
 
-  useEffect(() => {
-    if (session?.user) {
-      router.replace('/admin');
-    }
-  }, [session, router]);
+  const isLoading = isSubmitting;
 
-  const isLoading = isSubmitting || isSessionPending;
-
-  const onSubmit = async ({ email, password }: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
     setHasLoggedIn(false);
 
-    /**
-     * @todo implement signup logic to supabase
-     */
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    // try {
-    //   const result = await authClient.signIn.email({ email, password });
+      const result = await response.json();
 
-    //   if (result.error) {
-    //     throw result.error;
-    //   }
+      if (!response.ok) {
+        throw new Error(result.error || 'Signup failed.');
+      }
 
-    //   setHasLoggedIn(true);
-    //   await sessionState.refetch();
-    // } catch (error) {
-    //   const message =
-    //     error instanceof Error
-    //       ? error.message
-    //       : 'Failed to sign in. Please check your credentials and try again.';
-    //   setServerError(message);
-    // }
+      setHasLoggedIn(true);
+
+      // Redirect to login page after successful signup
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
+    } catch (error) {
+      setServerError(
+        error instanceof Error
+          ? error.message
+          : 'Signup failed.'
+      );
+    }
   };
 
   return (
@@ -140,8 +136,8 @@ export default function AdminLoginPage() {
                   />
                 )}
               />
-              {errors.email ? (
-                <p className="text-xs text-red-600">{errors.email.message}</p>
+              {errors.username ? (
+                <p className="text-xs text-red-600">{errors.username.message}</p>
               ) : null}
             </div>
           </div>
@@ -175,7 +171,7 @@ export default function AdminLoginPage() {
                   type="password"
                   placeholder="Password"
                   className="border-primary-100 h-10 w-full rounded-md border p-2"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
               )}
             />
@@ -210,17 +206,16 @@ export default function AdminLoginPage() {
               Signed in successfully. Redirecting…
             </p>
           ) : null}
-          {isSessionPending ? (
+          {/* {isSessionPending ? (
             <p className="text-muted-foreground text-sm">
               Verifying session…
             </p>
-          ) : null}
-
+          ) : null} */}
           <Button
             type="submit"
             className="bg-primary-500 h-10 w-full rounded-md text-white"
             disabled={isLoading}>
-            {isLoading ? 'Signing in…' : 'Sign in'}
+            {isLoading ? 'Signing up…' : 'Sign up'}
           </Button>
 
           <p className="text-primary-500 text-sm">Already have an account? <Link href="/auth/login" className="underline">Sign in</Link></p>

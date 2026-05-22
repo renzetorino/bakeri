@@ -1,12 +1,11 @@
 'use client';
-
+import { supabaseClient } from '@/lib/auth/supabase-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { authClient } from '@/lib/auth/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -22,8 +21,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const sessionState = authClient.useSession();
-  const { data: session, isPending: isSessionPending } = sessionState;
   const [serverError, setServerError] = useState<string | null>(null);
   const [hasLoggedIn, setHasLoggedIn] = useState(false);
 
@@ -39,27 +36,39 @@ export default function AdminLoginPage() {
     },
   });
 
-  useEffect(() => {
-    if (session?.user) {
-      router.replace('/admin');
-    }
-  }, [session, router]);
-
-  const isLoading = isSubmitting || isSessionPending;
+  const isLoading = isSubmitting;
 
   const onSubmit = async ({ email, password }: LoginFormValues) => {
     setServerError(null);
     setHasLoggedIn(false);
 
     try {
-      const result = await authClient.signIn.email({ email, password });
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (result.error) {
-        throw result.error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sign in');
       }
 
       setHasLoggedIn(true);
-      await sessionState.refetch();
+
+      
+      await supabaseClient.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      });
+
+      
+      setTimeout(() => {
+        router.push('/');
+      }, 1000);
     } catch (error) {
       const message =
         error instanceof Error
@@ -125,11 +134,11 @@ export default function AdminLoginPage() {
               Signed in successfully. Redirecting…
             </p>
           ) : null}
-          {isSessionPending ? (
+          {/* {isSessionPending ? (
             <p className="text-muted-foreground text-sm">
               Verifying session…
             </p>
-          ) : null}
+          ) : null} */}
 
           <Button
             type="submit"

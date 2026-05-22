@@ -1,20 +1,21 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull().unique(),
-  name: text('name'),
-  image: text('image'),
-  emailVerified: timestamp('email_verified'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+
+export const userAccount = pgTable('useraccount', {
+  userid: uuid('userid').primaryKey(),
+  username: text('username'),
+  email: text('email'),
+  address: text('address'),
+  createdAt: timestamp('created_at', {
+    withTimezone: true,
+  }).defaultNow().notNull(),
 });
 
 export const accounts = pgTable('accounts', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => userAccount.userid, { onDelete: 'cascade' }),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
   accessToken: text('access_token'),
@@ -33,7 +34,7 @@ export const sessions = pgTable('sessions', {
   token: text('token').notNull().unique(),
   userId: uuid('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => userAccount.userid, { onDelete: 'cascade' }),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -49,5 +50,5 @@ export const verificationTokens = pgTable('verification_tokens', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+export type User = typeof userAccount.$inferSelect;
+export type NewUser = typeof userAccount.$inferInsert;
