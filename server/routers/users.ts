@@ -1,4 +1,4 @@
-import { users } from '@/lib/db/schema';
+import { userAccount } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import z from 'zod';
 import { protectedProcedure, publicProcedure, router } from '../trpc';
@@ -11,12 +11,12 @@ export default router({
       }),
     )
     .query(({ ctx, input }) => {
-      return ctx.db.select().from(users).where(eq(users.email, input.email));
+      return ctx.db.select().from(userAccount).where(eq(userAccount.email, input.email));
     }),
 
   getListOfUsers: protectedProcedure
     .query(({ ctx }) => {
-      return ctx.db.select().from(users);
+      return ctx.db.select().from(userAccount);
     }),
 
 });
