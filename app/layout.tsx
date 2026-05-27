@@ -19,9 +19,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Bake RI',
+  title: 'Bake-Keri',
   description:
-    'Bake Ri',
+    'Bake-Keri',
 };
 
 export default function RootLayout({

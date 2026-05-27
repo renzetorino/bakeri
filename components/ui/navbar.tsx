@@ -49,7 +49,7 @@ const Navbar = () => {
         className={`text-2xl font-bold tracking-tight transition-colors duration-300 ${
           scrolled || pathname !== '/' ? 'text-primary-700' : 'text-white'
         }`}>
-        Bake RI
+        Bake-Keri
       </Link>
       <div className="flex items-center gap-3">
         {/* CART (keep as is) */}

@@ -205,9 +205,9 @@ const Home = () => {
       {/* ── Footer ───────────────────────────────────────── */}
       <footer className="border-primary-50 border-t bg-gray-200 px-6 py-8 md:px-16">
         <div className="flex flex-col items-center gap-2 text-center md:flex-row md:justify-between md:text-left">
-          <span className="text-primary-700 text-lg font-bold">Bake RI</span>
+          <span className="text-primary-700 text-lg font-bold">Bake-Keri</span>
           <p className="text-primary-300 text-sm">
-            © {new Date().getFullYear()} Bake RI. All rights reserved.
+            © {new Date().getFullYear()} Bake-Keri. All rights reserved.
           </p>
           <p className="text-primary-200 text-xs">
             Made with love & flour 🍞
